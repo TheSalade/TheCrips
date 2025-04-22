@@ -1,0 +1,18 @@
+{
+  "name": "nft-ip-asset-forge",
+  "version": "1.0.0",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.3",
+    "@story-protocol/protocol-core": "https://github.com/storyprotocol/protocol-core-v1",
+    "@story-protocol/protocol-periphery": "https://github.com/storyprotocol/protocol-periphery-v1",
+    "erc6551": "*",
+    "solady": "*",
+    "ethers": "^5.7.2",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.3.11"
+  },
+  "devDependencies": {
+    "ds-test": "https://github.com/dapphub/ds-test",
+    "forge-std": "github:foundry-rs/forge-std#v1.7.6"
+  }
+}
