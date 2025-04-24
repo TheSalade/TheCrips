@@ -7,17 +7,12 @@ gas_reports = ["*"]
 optimizer = true
 optimizer_runs = 20000
 test = 'test'
-solc = '0.8.7' # Compatible avec ton contrat
+solc = '0.8.7'
 fs_permissions = [{ access = 'read', path = './out' }, { access = 'read-write', path = './deploy-out' }]
 evm_version = 'cancun'
 remappings = [
-    '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/',
-    '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
-    '@storyprotocol/core/=node_modules/@story-protocol/protocol-core/contracts/',
-    '@storyprotocol/periphery/=node_modules/@story-protocol/protocol-periphery/contracts/',
-    'erc6551/=node_modules/erc6551/',
+    '@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/',
     'forge-std/=node_modules/forge-std/src/',
-    'ds-test/=node_modules/ds-test/src/',
-    '@storyprotocol/test/=node_modules/@story-protocol/protocol-core/test/foundry/',
-    '@solady/=node_modules/solady/'
+    '@storyprotocol/core/=node_modules/@story-protocol/protocol-core/contracts/',
+    '@storyprotocol/periphery/=node_modules/@story-protocol/protocol-periphery/contracts/'
 ]

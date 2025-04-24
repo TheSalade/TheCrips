@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract MonsterNFT is ERC721, Ownable, IERC2981 {
+contract ContractName is ERC721, Ownable, IERC2981 {
     using Strings for uint256;
 
     // Merkle Roots pour les trois whitelists
@@ -60,7 +60,7 @@ contract MonsterNFT is ERC721, Ownable, IERC2981 {
         bytes32 _merkleRootVIP,
         bytes32 _merkleRootPartners,
         bytes32 _merkleRootPublic
-    ) ERC721("MonsterNFT", "MNFT") Ownable() {
+    ) ERC721("CollectName", "CollectTicker") Ownable() {
         baseURI = _theBaseURI;
         notRevealedURI = _notRevealedURI;
         merkleRootVIP = _merkleRootVIP;
@@ -183,7 +183,8 @@ contract MonsterNFT is ERC721, Ownable, IERC2981 {
 
     // Metadata
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        require(_exists(_tokenId), "Token does not exist");
+        // Vérifie si le token existe en utilisant ownerOf
+        require(ownerOf(_tokenId) != address(0), "Token does not exist");
         if (!revealed) {
             return notRevealedURI;
         }
