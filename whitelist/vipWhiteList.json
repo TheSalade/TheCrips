@@ -1,0 +1,19 @@
+{
+  "merkleRoot": "0x92535935543d0eeff6840300687e981bb0f308d268b8c8b4f2019bad102f426c",
+  "whiteList": [
+    {
+      "address": "0x14cAd55a3FaE4BCcf874397b011a6a18929c108f",
+      "leaf": "0xabda70f584c2961acc2c124df21ea137e91df82c643373c09834e3982bd08047",
+      "proof": [
+        "0x51b8ecf1b1fc7312cc2d62d26180fd98c23ffe3b30aff43c64a61951231bb787"
+      ]
+    },
+    {
+      "address": "0xe6db30dA89E8C6492dA3677fA9B5a7D59124995E",
+      "leaf": "0x51b8ecf1b1fc7312cc2d62d26180fd98c23ffe3b30aff43c64a61951231bb787",
+      "proof": [
+        "0xabda70f584c2961acc2c124df21ea137e91df82c643373c09834e3982bd08047"
+      ]
+    }
+  ]
+}

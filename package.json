@@ -1,6 +1,7 @@
 {
   "name": "nft-ip-asset-forge",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "@openzeppelin/contracts": "4.9.3",
     "@story-protocol/protocol-core": "https://github.com/storyprotocol/protocol-core-v1",

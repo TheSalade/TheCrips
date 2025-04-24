@@ -4,18 +4,18 @@ pragma solidity ^0.8.7;
 import "forge-std/Script.sol";
 import "../src/sm.sol";
 
-contract DeployNFT is Script {
+contract DeployContractName is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        string memory baseURI = "ipfs://<TON_CID>/";
-        string memory notRevealedURI = "ipfs://<TON_CID_NOT_REVEALED>";
+        string memory baseURI = "ipfs://CID/";
+        string memory notRevealedURI = "ipfs://CID";
         bytes32 merkleRootVIP = bytes32(vm.envBytes32("MERKLE_ROOT_VIP"));
         bytes32 merkleRootPartners = bytes32(vm.envBytes32("MERKLE_ROOT_PARTNERS"));
         bytes32 merkleRootPublic = bytes32(vm.envBytes32("MERKLE_ROOT_PUBLIC"));
 
-        MonsterNFT monsterNFT = new MonsterNFT(
+        ContractName contractName = new ContractName(
             baseURI,
             notRevealedURI,
             merkleRootVIP,
@@ -23,7 +23,7 @@ contract DeployNFT is Script {
             merkleRootPublic
         );
 
-        console.log("MonsterNFT deployed to:", address(monsterNFT));
+        console.log("ContractName deployed to:", address(contractName));
 
         vm.stopBroadcast();
     }
