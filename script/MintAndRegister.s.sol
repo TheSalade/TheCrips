@@ -12,7 +12,7 @@ contract MintAndRegister is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        address contractAddress = 0xe9e2E9f81Cde64D3e9F6B82FA5d387b390f1AAEa;
+        address contractAddress = 0xD79893669DEE104819EBA8755be93F98881EacC2;
         ContractName contractName = ContractName(contractAddress);
 
         contractName.setUpPresale();
