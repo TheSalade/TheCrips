@@ -1,0 +1,260 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.7;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+
+contract ContractName is ERC721, Ownable, IERC2981 {
+    using Strings for uint256;
+
+    // Merkle Roots pour les trois whitelists
+    bytes32 public merkleRootOG;
+    bytes32 public merkleRootGTD;
+    bytes32 public merkleRootFCFS;
+
+    // Paramètres de minting
+    uint256 public constant MAX_SUPPLY = 3333;
+    uint256 public maxMintAllowedOG = 2;
+    uint256 public maxMintAllowedGTD = 1;
+    uint256 public maxMintAllowedFCFS = 1;
+    uint256 public pricePresaleOG = 0.00002 ether;
+    uint256 public pricePresaleGTD = 0.000025 ether;
+    uint256 public pricePresaleFCFS = 0.00003 ether;
+    uint256 public pricePublic = 0.00003 ether;
+
+    // Metadata
+    string public baseURI;
+    string public baseExtension = ".json";
+    bool public paused = false;
+
+    // Royalties
+    uint256 public royaltyPercentage = 500; // 5%
+    address public royaltyReceiver;
+
+    // Adresse pour recevoir les fonds des mints
+    address public paymentReceiver;
+
+    // Événement pour tracer les transferts de fonds
+    event FundsTransferred(address indexed receiver, uint256 amount);
+
+    // Phases de vente
+    enum Steps {
+        Before,
+        OG,
+        GTD,
+        FCFS,
+        Public,
+        SoldOut
+    }
+    Steps public sellingStep;
+
+    // Suivi des mints par wallet
+    mapping(address => uint256) public nftsPerWallet;
+
+    // Compteur pour les token IDs
+    uint256 private _tokenIdCounter = 1;
+
+    constructor(
+        string memory _theBaseURI,
+        bytes32 _merkleRootOG,
+        bytes32 _merkleRootGTD,
+        bytes32 _merkleRootFCFS,
+        address _paymentReceiver
+    ) ERC721("CollectName", "CollectTicker") Ownable() {
+        baseURI = _theBaseURI;
+        merkleRootOG = _merkleRootOG;
+        merkleRootGTD = _merkleRootGTD;
+        merkleRootFCFS = _merkleRootFCFS;
+        royaltyReceiver = msg.sender;
+        paymentReceiver = _paymentReceiver;
+        sellingStep = Steps.Before;
+    }
+
+    // Fonctions de configuration (owner seulement)
+    function setPaused(bool _paused) external onlyOwner {
+        paused = _paused;
+    }
+
+    function setBaseUri(string memory _newBaseURI) external onlyOwner {
+        baseURI = _newBaseURI;
+    }
+
+    function setUpOG() external onlyOwner {
+        sellingStep = Steps.OG;
+    }
+
+    function setUpGTD() external onlyOwner {
+        require(sellingStep == Steps.OG, "OG sale must be active first");
+        sellingStep = Steps.GTD;
+    }
+
+    function setUpFCFS() external onlyOwner {
+        require(sellingStep == Steps.GTD, "GTD sale must be active first");
+        sellingStep = Steps.FCFS;
+    }
+
+    function setUpPublic() external onlyOwner {
+        require(sellingStep == Steps.FCFS, "FCFS sale must be active first");
+        sellingStep = Steps.Public;
+    }
+
+    // Fonctions pour mettre à jour les whitelists
+    function setMerkleRootOG(bytes32 _merkleRootOG) external onlyOwner {
+        merkleRootOG = _merkleRootOG;
+    }
+
+    function setMerkleRootGTD(bytes32 _merkleRootGTD) external onlyOwner {
+        merkleRootGTD = _merkleRootGTD;
+    }
+
+    function setMerkleRootFCFS(bytes32 _merkleRootFCFS) external onlyOwner {
+        merkleRootFCFS = _merkleRootFCFS;
+    }
+
+    // Fonctions pour mettre à jour les prix
+    function setPricePresaleOG(uint256 _price) external onlyOwner {
+        pricePresaleOG = _price;
+    }
+
+    function setPricePresaleGTD(uint256 _price) external onlyOwner {
+        pricePresaleGTD = _price;
+    }
+
+    function setPricePresaleFCFS(uint256 _price) external onlyOwner {
+        pricePresaleFCFS = _price;
+    }
+
+    function setPricePublic(uint256 _price) external onlyOwner {
+        pricePublic = _price;
+    }
+
+    // Fonctions pour gérer les royalties
+    function setRoyaltyReceiver(address _receiver) external onlyOwner {
+        require(_receiver != address(0), "Invalid receiver address");
+        royaltyReceiver = _receiver;
+    }
+
+    function setRoyaltyPercentage(uint256 _percentage) external onlyOwner {
+        require(_percentage <= 10000, "Percentage too high");
+        royaltyPercentage = _percentage;
+    }
+
+    // Fonction pour mettre à jour l'adresse de réception des fonds
+    function setPaymentReceiver(address _newReceiver) external onlyOwner {
+        require(_newReceiver != address(0), "Invalid receiver address");
+        paymentReceiver = _newReceiver;
+    }
+
+    // Fonctions de minting
+    function presaleMintOG(address _account, bytes32[] calldata _proof) external payable {
+        require(sellingStep == Steps.OG, "OG sale not active");
+        require(!paused, "Contract paused");
+        require(nftsPerWallet[_account] < maxMintAllowedOG, "Max mint reached for OG");
+        require(isWhitelistedOG(_account, _proof), "Not in OG whitelist");
+        require(msg.value >= pricePresaleOG, "Insufficient funds");
+        require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
+
+        nftsPerWallet[_account]++;
+        _safeMint(_account, _tokenIdCounter);
+        _tokenIdCounter++;
+
+        // Transférer les fonds à l'adresse personnalisée
+        (bool success, ) = paymentReceiver.call{value: msg.value}("");
+        require(success, "Transfer failed");
+        emit FundsTransferred(paymentReceiver, msg.value);
+    }
+
+    function presaleMintGTD(address _account, bytes32[] calldata _proof) external payable {
+        require(sellingStep == Steps.GTD, "GTD sale not active");
+        require(!paused, "Contract paused");
+        require(nftsPerWallet[_account] < maxMintAllowedGTD, "Max mint reached for GTD");
+        require(isWhitelistedGTD(_account, _proof), "Not in GTD whitelist");
+        require(msg.value >= pricePresaleGTD, "Insufficient funds");
+        require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
+
+        nftsPerWallet[_account]++;
+        _safeMint(_account, _tokenIdCounter);
+        _tokenIdCounter++;
+
+        // Transférer les fonds à l'adresse personnalisée
+        (bool success, ) = paymentReceiver.call{value: msg.value}("");
+        require(success, "Transfer failed");
+        emit FundsTransferred(paymentReceiver, msg.value);
+    }
+
+    function presaleMintFCFS(address _account, bytes32[] calldata _proof) external payable {
+        require(sellingStep == Steps.FCFS, "FCFS sale not active");
+        require(!paused, "Contract paused");
+        require(nftsPerWallet[_account] < maxMintAllowedFCFS, "Max mint reached for FCFS");
+        require(isWhitelistedFCFS(_account, _proof), "Not in FCFS whitelist");
+        require(msg.value >= pricePresaleFCFS, "Insufficient funds");
+        require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
+
+        nftsPerWallet[_account]++;
+        _safeMint(_account, _tokenIdCounter);
+        _tokenIdCounter++;
+
+        // Transférer les fonds à l'adresse personnalisée
+        (bool success, ) = paymentReceiver.call{value: msg.value}("");
+        require(success, "Transfer failed");
+        emit FundsTransferred(paymentReceiver, msg.value);
+    }
+
+    function publicMint(uint256 _amount) external payable {
+        require(sellingStep == Steps.Public, "Public sale not active");
+        require(!paused, "Contract paused");
+        require(msg.value >= pricePublic * _amount, "Insufficient funds");
+        require(_tokenIdCounter + _amount - 1 <= MAX_SUPPLY, "Max supply reached");
+
+        for (uint256 i = 0; i < _amount; i++) {
+            _safeMint(msg.sender, _tokenIdCounter);
+            _tokenIdCounter++;
+        }
+        if (_tokenIdCounter > MAX_SUPPLY) {
+            sellingStep = Steps.SoldOut;
+        }
+
+        // Transférer les fonds à l'adresse personnalisée
+        (bool success, ) = paymentReceiver.call{value: msg.value}("");
+        require(success, "Transfer failed");
+        emit FundsTransferred(paymentReceiver, msg.value);
+    }
+
+    function gift(address _account) external onlyOwner {
+        require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
+        _safeMint(_account, _tokenIdCounter);
+        _tokenIdCounter++;
+    }
+
+    // Vérification des whitelists
+    function isWhitelistedOG(address account, bytes32[] calldata proof) internal view returns (bool) {
+        return MerkleProof.verify(proof, merkleRootOG, keccak256(abi.encodePacked(account)));
+    }
+
+    function isWhitelistedGTD(address account, bytes32[] calldata proof) internal view returns (bool) {
+        return MerkleProof.verify(proof, merkleRootGTD, keccak256(abi.encodePacked(account)));
+    }
+
+    function isWhitelistedFCFS(address account, bytes32[] calldata proof) internal view returns (bool) {
+        return MerkleProof.verify(proof, merkleRootFCFS, keccak256(abi.encodePacked(account)));
+    }
+
+    // Royalties ERC-2981
+    function royaltyInfo(uint256, uint256 _salePrice) external view override returns (address receiver, uint256 royaltyAmount) {
+        return (royaltyReceiver, (_salePrice * royaltyPercentage) / 10000);
+    }
+
+    // Metadata
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        require(ownerOf(_tokenId) != address(0), "Token does not exist");
+        return string(abi.encodePacked(baseURI, _tokenId.toString(), baseExtension));
+    }
+
+    // Fonction pour récupérer le totalSupply
+    function totalSupply() external view returns (uint256) {
+        return _tokenIdCounter - 1;
+    }
+}
