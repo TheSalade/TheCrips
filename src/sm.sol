@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: MIT
+
+// Powered by The Bakery DAO
+// Developed by @TRTtheSalad
+// https://github.com/TRTtheSalad
+
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -10,67 +15,59 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract ContractName is ERC721, Ownable, IERC2981 {
     using Strings for uint256;
 
-    // Merkle Roots pour les trois whitelists
-    bytes32 public merkleRootVIP;
-    bytes32 public merkleRootPartners;
-    bytes32 public merkleRootPublic;
+    bytes32 public merkleRootOG;
+    bytes32 public merkleRootGTD;
+    bytes32 public merkleRootFCFS;
 
-    // Paramètres de minting
-    uint256 public constant MAX_SUPPLY = 7777;
-    uint256 public maxMintAllowedVIP = 3;
-    uint256 public maxMintAllowedPartners = 2;
-    uint256 public maxMintAllowedPublic = 1;
-    uint256 public pricePresaleVIP = 0.0002 ether;
-    uint256 public pricePresalePartners = 0.00025 ether;
-    uint256 public pricePresalePublic = 0.0003 ether;
-    uint256 public priceSale = 0.0003 ether;
+    uint256 public constant MAX_SUPPLY = 3333;
+    uint256 public maxMintAllowedOG = 5;
+    uint256 public maxMintAllowedGTD = 5;
+    uint256 public maxMintAllowedFCFS = 5;
+    uint256 public pricePresaleOG = 0.00002 ether;
+    uint256 public pricePresaleGTD = 0.000025 ether;
+    uint256 public pricePresaleFCFS = 0.00003 ether;
+    uint256 public pricePublic = 0.00003 ether;
 
-    // Metadata
     string public baseURI;
-    string public notRevealedURI;
     string public baseExtension = ".json";
-    bool public revealed = false;
     bool public paused = false;
 
-    // Royalties
     uint256 public royaltyPercentage = 500; // 5%
     address public royaltyReceiver;
 
-    // Phases de vente
+    address public paymentReceiver;
+
+    event FundsTransferred(address indexed receiver, uint256 amount);
+
     enum Steps {
         Before,
-        Presale,
-        Sale,
-        SoldOut,
-        Reveal
+        OG,
+        GTD,
+        FCFS,
+        Public,
+        SoldOut
     }
     Steps public sellingStep;
 
-    // Suivi des mints par wallet
-    mapping(address => uint256) public nftsPerWalletVIP;
-    mapping(address => uint256) public nftsPerWalletPartners;
-    mapping(address => uint256) public nftsPerWalletPublic;
+    mapping(address => uint256) public nftsPerWallet;
 
-    // Compteur pour les token IDs
     uint256 private _tokenIdCounter = 1;
 
     constructor(
         string memory _theBaseURI,
-        string memory _notRevealedURI,
-        bytes32 _merkleRootVIP,
-        bytes32 _merkleRootPartners,
-        bytes32 _merkleRootPublic
+        bytes32 _merkleRootOG,
+        bytes32 _merkleRootGTD,
+        bytes32 _merkleRootFCFS
     ) ERC721("CollectName", "CollectTicker") Ownable() {
         baseURI = _theBaseURI;
-        notRevealedURI = _notRevealedURI;
-        merkleRootVIP = _merkleRootVIP;
-        merkleRootPartners = _merkleRootPartners;
-        merkleRootPublic = _merkleRootPublic;
+        merkleRootOG = _merkleRootOG;
+        merkleRootGTD = _merkleRootGTD;
+        merkleRootFCFS = _merkleRootFCFS;
         royaltyReceiver = msg.sender;
+        paymentReceiver = msg.sender;
         sellingStep = Steps.Before;
     }
 
-    // Fonctions de configuration (owner seulement)
     function setPaused(bool _paused) external onlyOwner {
         paused = _paused;
     }
@@ -79,71 +76,125 @@ contract ContractName is ERC721, Ownable, IERC2981 {
         baseURI = _newBaseURI;
     }
 
-    function setNotRevealURI(string memory _notRevealedURI) external onlyOwner {
-        notRevealedURI = _notRevealedURI;
+    function setUpOG() external onlyOwner {
+        sellingStep = Steps.OG;
     }
 
-    function reveal() external onlyOwner {
-        revealed = true;
+    function setUpGTD() external onlyOwner {
+        require(sellingStep == Steps.OG, "OG sale must be active first");
+        sellingStep = Steps.GTD;
     }
 
-    function setUpPresale() external onlyOwner {
-        sellingStep = Steps.Presale;
+    function setUpFCFS() external onlyOwner {
+        require(sellingStep == Steps.GTD, "GTD sale must be active first");
+        sellingStep = Steps.FCFS;
     }
 
-    function setUpSale() external onlyOwner {
-        require(sellingStep == Steps.Presale, "Presale must be active");
-        sellingStep = Steps.Sale;
+    function setUpPublic() external onlyOwner {
+        require(sellingStep == Steps.FCFS, "FCFS sale must be active first");
+        sellingStep = Steps.Public;
     }
 
-    // Fonctions de minting
-    function presaleMintVIP(address _account, bytes32[] calldata _proof) external payable {
-        require(sellingStep == Steps.Presale, "Presale not active");
+    function setMerkleRootOG(bytes32 _merkleRootOG) external onlyOwner {
+        merkleRootOG = _merkleRootOG;
+    }
+
+    function setMerkleRootGTD(bytes32 _merkleRootGTD) external onlyOwner {
+        merkleRootGTD = _merkleRootGTD;
+    }
+
+    function setMerkleRootFCFS(bytes32 _merkleRootFCFS) external onlyOwner {
+        merkleRootFCFS = _merkleRootFCFS;
+    }
+
+    function setPricePresaleOG(uint256 _price) external onlyOwner {
+        pricePresaleOG = _price;
+    }
+
+    function setPricePresaleGTD(uint256 _price) external onlyOwner {
+        pricePresaleGTD = _price;
+    }
+
+    function setPricePresaleFCFS(uint256 _price) external onlyOwner {
+        pricePresaleFCFS = _price;
+    }
+
+    function setPricePublic(uint256 _price) external onlyOwner {
+        pricePublic = _price;
+    }
+
+    function setRoyaltyReceiver(address _receiver) external onlyOwner {
+        require(_receiver != address(0), "Invalid receiver address");
+        royaltyReceiver = _receiver;
+    }
+
+    function setRoyaltyPercentage(uint256 _percentage) external onlyOwner {
+        require(_percentage <= 10000, "Percentage too high");
+        royaltyPercentage = _percentage;
+    }
+
+    function setPaymentReceiver(address _newReceiver) external onlyOwner {
+        require(_newReceiver != address(0), "Invalid receiver address");
+        paymentReceiver = _newReceiver;
+    }
+
+    function presaleMintOG(address _account, bytes32[] calldata _proof) external payable {
+        require(sellingStep == Steps.OG, "OG sale not active");
         require(!paused, "Contract paused");
-        require(nftsPerWalletVIP[_account] < maxMintAllowedVIP, "Max mint reached for VIP");
-        require(isWhitelistedVIP(_account, _proof), "Not in VIP whitelist");
-        require(msg.value >= pricePresaleVIP, "Insufficient funds");
+        require(nftsPerWallet[_account] < maxMintAllowedOG, "Max mint reached for OG");
+        require(isWhitelistedOG(_account, _proof), "Not in OG whitelist");
+        require(msg.value >= pricePresaleOG, "Insufficient funds");
         require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
 
-        nftsPerWalletVIP[_account]++;
+        nftsPerWallet[_account]++;
         _safeMint(_account, _tokenIdCounter);
         _tokenIdCounter++;
+
+        (bool success, ) = paymentReceiver.call{value: msg.value}("");
+        require(success, "Transfer failed");
+        emit FundsTransferred(paymentReceiver, msg.value);
     }
 
-    function presaleMintPartners(address _account, bytes32[] calldata _proof) external payable {
-        require(sellingStep == Steps.Presale, "Presale not active");
+    function presaleMintGTD(address _account, bytes32[] calldata _proof) external payable {
+        require(sellingStep == Steps.GTD, "GTD sale not active");
         require(!paused, "Contract paused");
-        require(nftsPerWalletPartners[_account] < maxMintAllowedPartners, "Max mint reached for Partners");
-        require(isWhitelistedPartners(_account, _proof), "Not in Partners whitelist");
-        require(msg.value >= pricePresalePartners, "Insufficient funds");
+        require(nftsPerWallet[_account] < maxMintAllowedGTD, "Max mint reached for GTD");
+        require(isWhitelistedGTD(_account, _proof), "Not in GTD whitelist");
+        require(msg.value >= pricePresaleGTD, "Insufficient funds");
         require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
 
-        nftsPerWalletPartners[_account]++;
+        nftsPerWallet[_account]++;
         _safeMint(_account, _tokenIdCounter);
         _tokenIdCounter++;
+
+        (bool success, ) = paymentReceiver.call{value: msg.value}("");
+        require(success, "Transfer failed");
+        emit FundsTransferred(paymentReceiver, msg.value);
     }
 
-    function presaleMintPublic(address _account, bytes32[] calldata _proof) external payable {
-        require(sellingStep == Steps.Presale, "Presale not active");
+    function presaleMintFCFS(address _account, bytes32[] calldata _proof) external payable {
+        require(sellingStep == Steps.FCFS, "FCFS sale not active");
         require(!paused, "Contract paused");
-        require(nftsPerWalletPublic[_account] < maxMintAllowedPublic, "Max mint reached for Public");
-        require(isWhitelistedPublic(_account, _proof), "Not in Public whitelist");
-        require(msg.value >= pricePresalePublic, "Insufficient funds");
+        require(nftsPerWallet[_account] < maxMintAllowedFCFS, "Max mint reached for FCFS");
+        require(isWhitelistedFCFS(_account, _proof), "Not in FCFS whitelist");
+        require(msg.value >= pricePresaleFCFS, "Insufficient funds");
         require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
 
-        nftsPerWalletPublic[_account]++;
+        nftsPerWallet[_account]++;
         _safeMint(_account, _tokenIdCounter);
         _tokenIdCounter++;
+
+        (bool success, ) = paymentReceiver.call{value: msg.value}("");
+        require(success, "Transfer failed");
+        emit FundsTransferred(paymentReceiver, msg.value);
     }
 
-    function saleMint(uint256 _amount) external payable {
-        require(sellingStep == Steps.Sale, "Sale not active");
+    function publicMint(uint256 _amount) external payable {
+        require(sellingStep == Steps.Public, "Public sale not active");
         require(!paused, "Contract paused");
-        require(_amount <= maxMintAllowedPublic, "Cannot mint more than allowed");
-        require(msg.value >= priceSale * _amount, "Insufficient funds");
+        require(msg.value >= pricePublic * _amount, "Insufficient funds");
         require(_tokenIdCounter + _amount - 1 <= MAX_SUPPLY, "Max supply reached");
 
-        nftsPerWalletPublic[msg.sender] += _amount;
         for (uint256 i = 0; i < _amount; i++) {
             _safeMint(msg.sender, _tokenIdCounter);
             _tokenIdCounter++;
@@ -151,6 +202,10 @@ contract ContractName is ERC721, Ownable, IERC2981 {
         if (_tokenIdCounter > MAX_SUPPLY) {
             sellingStep = Steps.SoldOut;
         }
+
+        (bool success, ) = paymentReceiver.call{value: msg.value}("");
+        require(success, "Transfer failed");
+        emit FundsTransferred(paymentReceiver, msg.value);
     }
 
     function gift(address _account) external onlyOwner {
@@ -159,39 +214,27 @@ contract ContractName is ERC721, Ownable, IERC2981 {
         _tokenIdCounter++;
     }
 
-    // Vérification des whitelists
-    function isWhitelistedVIP(address account, bytes32[] calldata proof) internal view returns (bool) {
-        return MerkleProof.verify(proof, merkleRootVIP, keccak256(abi.encodePacked(account)));
+    function isWhitelistedOG(address account, bytes32[] calldata proof) internal view returns (bool) {
+        return MerkleProof.verify(proof, merkleRootOG, keccak256(abi.encodePacked(account)));
     }
 
-    function isWhitelistedPartners(address account, bytes32[] calldata proof) internal view returns (bool) {
-        return MerkleProof.verify(proof, merkleRootPartners, keccak256(abi.encodePacked(account)));
+    function isWhitelistedGTD(address account, bytes32[] calldata proof) internal view returns (bool) {
+        return MerkleProof.verify(proof, merkleRootGTD, keccak256(abi.encodePacked(account)));
     }
 
-    function isWhitelistedPublic(address account, bytes32[] calldata proof) internal view returns (bool) {
-        return MerkleProof.verify(proof, merkleRootPublic, keccak256(abi.encodePacked(account)));
+    function isWhitelistedFCFS(address account, bytes32[] calldata proof) internal view returns (bool) {
+        return MerkleProof.verify(proof, merkleRootFCFS, keccak256(abi.encodePacked(account)));
     }
 
-    // Royalties ERC-2981
     function royaltyInfo(uint256, uint256 _salePrice) external view override returns (address receiver, uint256 royaltyAmount) {
         return (royaltyReceiver, (_salePrice * royaltyPercentage) / 10000);
     }
 
-    function setRoyaltyPercentage(uint256 _percentage) external onlyOwner {
-        royaltyPercentage = _percentage;
-    }
-
-    // Metadata
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        // Vérifie si le token existe en utilisant ownerOf
         require(ownerOf(_tokenId) != address(0), "Token does not exist");
-        if (!revealed) {
-            return notRevealedURI;
-        }
         return string(abi.encodePacked(baseURI, _tokenId.toString(), baseExtension));
     }
 
-    // Fonction pour récupérer le totalSupply
     function totalSupply() external view returns (uint256) {
         return _tokenIdCounter - 1;
     }

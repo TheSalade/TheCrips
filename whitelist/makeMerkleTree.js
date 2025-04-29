@@ -2,15 +2,15 @@ import { MerkleTree } from "merkletreejs";
 import { keccak256 } from "ethers";
 import fs from "fs";
 
-const vipAddresses = [
+const OGAddresses = [
   "0x14cAd55a3FaE4BCcf874397b011a6a18929c108f",
   "0xe6db30dA89E8C6492dA3677fA9B5a7D59124995E"
 ];
-const partnersAddresses = [
+const GTDAddresses = [
   "0x5d2614e0630aa8a556d16bce96e78eaf08098021",
   "0x7dfb98ac2167b16f667ad8ee3730cff849016a0f"
 ];
-const publicAddresses = [
+const FCFSAddresses = [
   "0x3a2D49d9282227a653c1A92b13E9742ad65Bba54",
   "0x659c1E1D008b174CcE2Cf22632aaB1add333Dc50"
 ];
@@ -59,6 +59,6 @@ function generateMerkleData(addresses, outputFile) {
   });
 }
 
-generateMerkleData(vipAddresses, "./whitelist/vipWhiteList.json");
-generateMerkleData(partnersAddresses, "./whitelist/partnersWhiteList.json");
-generateMerkleData(publicAddresses, "./whitelist/publicWhiteList.json");
+generateMerkleData(OGAddresses, "./whitelist/OGWhiteList.json");
+generateMerkleData(GTDAddresses, "./whitelist/GTDWhiteList.json");
+generateMerkleData(FCFSAddresses, "./whitelist/FCFSWhiteList.json");

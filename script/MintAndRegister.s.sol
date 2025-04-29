@@ -12,20 +12,27 @@ contract MintAndRegister is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        address contractAddress = 0xD79893669DEE104819EBA8755be93F98881EacC2;
+        address contractAddress = 0x56F0EF87bC332D1211fd9a2110d06981c985863e;
         ContractName contractName = ContractName(contractAddress);
 
-        contractName.setUpPresale();
+        contractName.setUpOG();
 
         bytes32[] memory vipProof = new bytes32[](1);
-        vipProof[0] = bytes32(0xd8cc45e791c50ade5ca76d1845ce9e00cfbc01600d3da0d8427f4701b24dd09b);
+        vipProof[0] = bytes32(0x51b8ecf1b1fc7312cc2d62d26180fd98c23ffe3b30aff43c64a61951231bb787);
         // Ajoute plus de proofs si nécessaire
         address account = 0x14cAd55a3FaE4BCcf874397b011a6a18929c108f;
 
-        contractName.presaleMintVIP{value: 0.0002 ether}(account, vipProof);
+        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
+        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
+        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
+        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
+        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
 
         uint256 tokenId = contractName.totalSupply();
 
+        address ipId = IP_ASSET_REGISTRY.register(block.chainid, contractAddress, tokenId);
+        address ipId = IP_ASSET_REGISTRY.register(block.chainid, contractAddress, tokenId);
+        address ipId = IP_ASSET_REGISTRY.register(block.chainid, contractAddress, tokenId);
         address ipId = IP_ASSET_REGISTRY.register(block.chainid, contractAddress, tokenId);
 
         console.log("NFT minted with tokenId:", tokenId);
