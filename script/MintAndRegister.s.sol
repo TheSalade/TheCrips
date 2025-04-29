@@ -19,20 +19,13 @@ contract MintAndRegister is Script {
 
         bytes32[] memory vipProof = new bytes32[](1);
         vipProof[0] = bytes32(0x51b8ecf1b1fc7312cc2d62d26180fd98c23ffe3b30aff43c64a61951231bb787);
-        // Ajoute plus de proofs si nécessaire
+
         address account = 0x14cAd55a3FaE4BCcf874397b011a6a18929c108f;
 
-        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
-        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
-        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
-        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
         contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
 
         uint256 tokenId = contractName.totalSupply();
 
-        address ipId = IP_ASSET_REGISTRY.register(block.chainid, contractAddress, tokenId);
-        address ipId = IP_ASSET_REGISTRY.register(block.chainid, contractAddress, tokenId);
-        address ipId = IP_ASSET_REGISTRY.register(block.chainid, contractAddress, tokenId);
         address ipId = IP_ASSET_REGISTRY.register(block.chainid, contractAddress, tokenId);
 
         console.log("NFT minted with tokenId:", tokenId);
