@@ -18,7 +18,7 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     bytes32 public merkleRootGTD;
     bytes32 public merkleRootFCFS;
 
-    uint256 public MAX_SUPPLY = 3333; // Non constant
+    uint256 public MAX_SUPPLY = 3333;
     uint256 public maxMintAllowedOG = 5;
     uint256 public maxMintAllowedGTD = 5;
     uint256 public maxMintAllowedFCFS = 5;
