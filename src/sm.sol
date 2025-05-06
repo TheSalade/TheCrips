@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 // Powered by The Bakery DAO
 // Developed by @TRTtheSalad
 // https://github.com/TRTtheSalad
@@ -19,7 +18,7 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     bytes32 public merkleRootGTD;
     bytes32 public merkleRootFCFS;
 
-    uint256 public constant MAX_SUPPLY = 3333;
+    uint256 public MAX_SUPPLY = 3333; // Non constant
     uint256 public maxMintAllowedOG = 5;
     uint256 public maxMintAllowedGTD = 5;
     uint256 public maxMintAllowedFCFS = 5;
@@ -38,6 +37,7 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     address public paymentReceiver;
 
     event FundsTransferred(address indexed receiver, uint256 amount);
+    event MaxSupplyUpdated(uint256 oldMaxSupply, uint256 newMaxSupply);
 
     enum Steps {
         Before,
@@ -66,6 +66,13 @@ contract ContractName is ERC721, Ownable, IERC2981 {
         royaltyReceiver = msg.sender;
         paymentReceiver = msg.sender;
         sellingStep = Steps.Before;
+    }
+
+    function setMaxSupply(uint256 _newMaxSupply) external onlyOwner {
+        require(_newMaxSupply >= _tokenIdCounter - 1, "New max supply too low");
+        require(_newMaxSupply > 0, "Max supply must be greater than 0");
+        emit MaxSupplyUpdated(MAX_SUPPLY, _newMaxSupply);
+        MAX_SUPPLY = _newMaxSupply;
     }
 
     function setPaused(bool _paused) external onlyOwner {
@@ -208,10 +215,14 @@ contract ContractName is ERC721, Ownable, IERC2981 {
         emit FundsTransferred(paymentReceiver, msg.value);
     }
 
-    function gift(address _account) external onlyOwner {
-        require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
-        _safeMint(_account, _tokenIdCounter);
-        _tokenIdCounter++;
+    function gift(address _account, uint256 _amount) external onlyOwner {
+        require(_amount > 0, "Amount must be greater than 0");
+        require(_tokenIdCounter + _amount - 1 <= MAX_SUPPLY, "Max supply reached");
+
+        for (uint256 i = 0; i < _amount; i++) {
+            _safeMint(_account, _tokenIdCounter);
+            _tokenIdCounter++;
+        }
     }
 
     function isWhitelistedOG(address account, bytes32[] calldata proof) internal view returns (bool) {
