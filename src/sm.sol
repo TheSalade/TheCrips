@@ -14,17 +14,14 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract ContractName is ERC721, Ownable, IERC2981 {
     using Strings for uint256;
 
-    bytes32 public merkleRootTeam;
     bytes32 public merkleRootOG;
     bytes32 public merkleRootGTD;
     bytes32 public merkleRootFCFS;
 
     uint256 public MAX_SUPPLY = 3333;
-    uint256 public maxMintAllowedTeam = 30;
     uint256 public maxMintAllowedOG = 5;
     uint256 public maxMintAllowedGTD = 5;
     uint256 public maxMintAllowedFCFS = 5;
-    uint256 public pricePresaleTeam = 0.000015 ether;
     uint256 public pricePresaleOG = 0.00002 ether;
     uint256 public pricePresaleGTD = 0.000025 ether;
     uint256 public pricePresaleFCFS = 0.00003 ether;
@@ -44,7 +41,6 @@ contract ContractName is ERC721, Ownable, IERC2981 {
 
     enum Steps {
         Before,
-        Team,
         OG,
         GTD,
         FCFS,
@@ -59,13 +55,11 @@ contract ContractName is ERC721, Ownable, IERC2981 {
 
     constructor(
         string memory _theBaseURI,
-        bytes32 _merkleRootTeam,
         bytes32 _merkleRootOG,
         bytes32 _merkleRootGTD,
         bytes32 _merkleRootFCFS
     ) ERC721("CollectName", "CollectTicker") Ownable() {
         baseURI = _theBaseURI;
-        merkleRootTeam = _merkleRootTeam;
         merkleRootOG = _merkleRootOG;
         merkleRootGTD = _merkleRootGTD;
         merkleRootFCFS = _merkleRootFCFS;
@@ -89,12 +83,7 @@ contract ContractName is ERC721, Ownable, IERC2981 {
         baseURI = _newBaseURI;
     }
 
-    function setUpTeam() external onlyOwner {
-        sellingStep = Steps.Team;
-    }
-
     function setUpOG() external onlyOwner {
-        require(sellingStep == Steps.Team, "Team sale must be active first");
         sellingStep = Steps.OG;
     }
 
@@ -113,10 +102,6 @@ contract ContractName is ERC721, Ownable, IERC2981 {
         sellingStep = Steps.Public;
     }
 
-    function setMerkleRootTeam(bytes32 _merkleRootTeam) external onlyOwner {
-        merkleRootTeam = _merkleRootTeam;
-    }
-
     function setMerkleRootOG(bytes32 _merkleRootOG) external onlyOwner {
         merkleRootOG = _merkleRootOG;
     }
@@ -127,10 +112,6 @@ contract ContractName is ERC721, Ownable, IERC2981 {
 
     function setMerkleRootFCFS(bytes32 _merkleRootFCFS) external onlyOwner {
         merkleRootFCFS = _merkleRootFCFS;
-    }
-
-    function setPricePresaleTeam(uint256 _price) external onlyOwner {
-        pricePresaleTeam = _price;
     }
 
     function setPricePresaleOG(uint256 _price) external onlyOwner {
@@ -162,23 +143,6 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     function setPaymentReceiver(address _newReceiver) external onlyOwner {
         require(_newReceiver != address(0), "Invalid receiver address");
         paymentReceiver = _newReceiver;
-    }
-
-    function presaleMintTeam(address _account, bytes32[] calldata _proof) external payable {
-        require(sellingStep == Steps.Team, "Team sale not active");
-        require(!paused, "Contract paused");
-        require(nftsPerWallet[_account] < maxMintAllowedTeam, "Max mint reached for Team");
-        require(isWhitelistedTeam(_account, _proof), "Not in Team whitelist");
-        require(msg.value >= pricePresaleTeam, "Insufficient funds");
-        require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
-
-        nftsPerWallet[_account]++;
-        _safeMint(_account, _tokenIdCounter);
-        _tokenIdCounter++;
-
-        (bool success, ) = paymentReceiver.call{value: msg.value}("");
-        require(success, "Transfer failed");
-        emit FundsTransferred(paymentReceiver, msg.value);
     }
 
     function presaleMintOG(address _account, bytes32[] calldata _proof) external payable {
@@ -259,10 +223,6 @@ contract ContractName is ERC721, Ownable, IERC2981 {
             _safeMint(_account, _tokenIdCounter);
             _tokenIdCounter++;
         }
-    }
-
-    function isWhitelistedTeam(address account, bytes32[] calldata proof) internal view returns (bool) {
-        return MerkleProof.verify(proof, merkleRootTeam, keccak256(abi.encodePacked(account)));
     }
 
     function isWhitelistedOG(address account, bytes32[] calldata proof) internal view returns (bool) {
