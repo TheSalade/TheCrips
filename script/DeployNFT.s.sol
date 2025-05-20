@@ -11,14 +11,12 @@ contract DeployContractName is Script {
 
         string memory cid = vm.envString("CID");
         string memory baseURI = string(abi.encodePacked("ipfs://", cid, "/"));
-        bytes32 merkleRootTeam = bytes32(vm.envBytes32("MERKLE_ROOT_TEAM"));
         bytes32 merkleRootOG = bytes32(vm.envBytes32("MERKLE_ROOT_OG"));
         bytes32 merkleRootGTD = bytes32(vm.envBytes32("MERKLE_ROOT_GTD"));
         bytes32 merkleRootFCFS = bytes32(vm.envBytes32("MERKLE_ROOT_FCFS"));
 
         ContractName contractName = new ContractName(
             baseURI,
-            merkleRootTeam,
             merkleRootOG,
             merkleRootGTD,
             merkleRootFCFS
