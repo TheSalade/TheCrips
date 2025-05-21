@@ -68,6 +68,11 @@ contract ContractName is ERC721, Ownable, IERC2981 {
         sellingStep = Steps.Before;
     }
 
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override {
+        require(sellingStep == Steps.SoldOut, "Transfers not allowed until mint is sold out");
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
     function setMaxSupply(uint256 _newMaxSupply) external onlyOwner {
         require(_newMaxSupply >= _tokenIdCounter - 1, "New max supply too low");
         require(_newMaxSupply > 0, "Max supply must be greater than 0");
