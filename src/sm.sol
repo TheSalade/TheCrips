@@ -20,12 +20,12 @@ contract ContractName is ERC721, Ownable, IERC2981 {
 
     uint256 public MAX_SUPPLY = 3333;
     uint256 public maxMintAllowedOG = 5;
-    uint256 public maxMintAllowedGTD = 5;
-    uint256 public maxMintAllowedFCFS = 5;
+    uint256 public maxMintAllowedGTD = 4;
+    uint256 public maxMintAllowedFCFS = 2;
     uint256 public pricePresaleOG = 0.00002 ether;
     uint256 public pricePresaleGTD = 0.000025 ether;
     uint256 public pricePresaleFCFS = 0.00003 ether;
-    uint256 public pricePublic = 0.00003 ether;
+    uint256 public pricePublic = 0.00004 ether;
 
     string public baseURI;
     string public baseExtension = ".json";
@@ -50,6 +50,10 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     Steps public sellingStep;
 
     mapping(address => uint256) public nftsPerWallet;
+    mapping(address => uint256) public nftsPerWalletGTD;
+    mapping(address => uint256) public nftsPerWalletOG;
+    mapping(address => uint256) public nftsPerWalletWL;
+    mapping(address => uint256) public nftsPerWalletPublic;
 
     uint256 private _tokenIdCounter = 1;
 
@@ -69,7 +73,7 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override {
-        require(sellingStep == Steps.SoldOut, "Transfers not allowed until mint is sold out");
+        require(from == address(0) || sellingStep == Steps.SoldOut, "Transfers not allowed until mint is sold out");
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 
@@ -86,6 +90,10 @@ contract ContractName is ERC721, Ownable, IERC2981 {
 
     function setBaseUri(string memory _newBaseURI) external onlyOwner {
         baseURI = _newBaseURI;
+    }
+
+    function setUpBefore() external onlyOwner {
+        sellingStep = Steps.Before;
     }
 
     function setUpOG() external onlyOwner {
@@ -105,6 +113,10 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     function setUpPublic() external onlyOwner {
         require(sellingStep == Steps.FCFS, "FCFS sale must be active first");
         sellingStep = Steps.Public;
+    }
+
+    function setUpSoldOut() external onlyOwner {
+        sellingStep = Steps.SoldOut;
     }
 
     function setMerkleRootOG(bytes32 _merkleRootOG) external onlyOwner {
@@ -153,12 +165,13 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     function presaleMintOG(address _account, bytes32[] calldata _proof) external payable {
         require(sellingStep == Steps.OG, "OG sale not active");
         require(!paused, "Contract paused");
-        require(nftsPerWallet[_account] < maxMintAllowedOG, "Max mint reached for OG");
+        require(nftsPerWalletOG[_account] < maxMintAllowedOG, "Max mint reached for OG");
         require(isWhitelistedOG(_account, _proof), "Not in OG whitelist");
         require(msg.value >= pricePresaleOG, "Insufficient funds");
         require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
 
         nftsPerWallet[_account]++;
+        nftsPerWalletOG[_account]++;
         _safeMint(_account, _tokenIdCounter);
         _tokenIdCounter++;
 
@@ -170,12 +183,13 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     function presaleMintGTD(address _account, bytes32[] calldata _proof) external payable {
         require(sellingStep == Steps.GTD, "GTD sale not active");
         require(!paused, "Contract paused");
-        require(nftsPerWallet[_account] < maxMintAllowedGTD, "Max mint reached for GTD");
+        require(nftsPerWalletGTD[_account] < maxMintAllowedGTD, "Max mint reached for GTD");
         require(isWhitelistedGTD(_account, _proof), "Not in GTD whitelist");
         require(msg.value >= pricePresaleGTD, "Insufficient funds");
         require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
 
         nftsPerWallet[_account]++;
+        nftsPerWalletGTD[_account]++;
         _safeMint(_account, _tokenIdCounter);
         _tokenIdCounter++;
 
@@ -187,12 +201,13 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     function presaleMintFCFS(address _account, bytes32[] calldata _proof) external payable {
         require(sellingStep == Steps.FCFS, "FCFS sale not active");
         require(!paused, "Contract paused");
-        require(nftsPerWallet[_account] < maxMintAllowedFCFS, "Max mint reached for FCFS");
+        require(nftsPerWalletWL[_account] < maxMintAllowedFCFS, "Max mint reached for FCFS");
         require(isWhitelistedFCFS(_account, _proof), "Not in FCFS whitelist");
         require(msg.value >= pricePresaleFCFS, "Insufficient funds");
         require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
 
         nftsPerWallet[_account]++;
+        nftsPerWalletWL[_account]++;
         _safeMint(_account, _tokenIdCounter);
         _tokenIdCounter++;
 
@@ -214,6 +229,9 @@ contract ContractName is ERC721, Ownable, IERC2981 {
         if (_tokenIdCounter > MAX_SUPPLY) {
             sellingStep = Steps.SoldOut;
         }
+
+        nftsPerWallet[msg.sender] += _amount;
+        nftsPerWalletPublic[msg.sender] += _amount;
 
         (bool success, ) = paymentReceiver.call{value: msg.value}("");
         require(success, "Transfer failed");
@@ -253,5 +271,17 @@ contract ContractName is ERC721, Ownable, IERC2981 {
 
     function totalSupply() external view returns (uint256) {
         return _tokenIdCounter - 1;
+    }
+
+    function getNftsPerWalletInPhase(address _wallet, Steps _phase) external view returns (uint256) {
+        if (_phase == Steps.GTD) return nftsPerWalletGTD[_wallet];
+        if (_phase == Steps.OG) return nftsPerWalletOG[_wallet];
+        if (_phase == Steps.FCFS) return nftsPerWalletWL[_wallet];
+        if (_phase == Steps.Public) return nftsPerWalletPublic[_wallet];
+        return 0;
+    }
+
+    function getTotalNftsPerWallet(address _wallet) external view returns (uint256) {
+        return nftsPerWallet[_wallet];
     }
 }
