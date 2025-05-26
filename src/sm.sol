@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract ContractName is ERC721, Ownable, IERC2981 {
+contract TheCripsNFTCollection is ERC721, Ownable, IERC2981 {
     using Strings for uint256;
 
     bytes32 public merkleRootOG;
@@ -19,13 +19,13 @@ contract ContractName is ERC721, Ownable, IERC2981 {
     bytes32 public merkleRootFCFS;
 
     uint256 public MAX_SUPPLY = 3333;
-    uint256 public maxMintAllowedOG = 5;
-    uint256 public maxMintAllowedGTD = 4;
+    uint256 public maxMintAllowedOG = 2;
+    uint256 public maxMintAllowedGTD = 2;
     uint256 public maxMintAllowedFCFS = 2;
-    uint256 public pricePresaleOG = 0.00002 ether;
-    uint256 public pricePresaleGTD = 0.000025 ether;
-    uint256 public pricePresaleFCFS = 0.00003 ether;
-    uint256 public pricePublic = 0.00004 ether;
+    uint256 public pricePresaleOG = 11 ether; 
+    uint256 public pricePresaleGTD = 22 ether;
+    uint256 public pricePresaleFCFS = 22 ether;
+    uint256 public pricePublic = 22 ether;
 
     string public baseURI;
     string public baseExtension = ".json";
@@ -62,7 +62,7 @@ contract ContractName is ERC721, Ownable, IERC2981 {
         bytes32 _merkleRootOG,
         bytes32 _merkleRootGTD,
         bytes32 _merkleRootFCFS
-    ) ERC721("CollectName", "CollectTicker") Ownable() {
+    ) ERC721("The Crips", "CRIPS") Ownable() {
         baseURI = _theBaseURI;
         merkleRootOG = _merkleRootOG;
         merkleRootGTD = _merkleRootGTD;
