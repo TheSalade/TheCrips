@@ -12,8 +12,8 @@ contract MintAndRegister is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        address contractAddress = 0x56F0EF87bC332D1211fd9a2110d06981c985863e;
-        ContractName contractName = ContractName(contractAddress);
+        address contractAddress = 0xEC93C2B3f91f5247826c4A212176319771435C87;
+        TheCripsNFTCollection contractName = TheCripsNFTCollection(contractAddress);
 
         contractName.setUpOG();
 
@@ -22,6 +22,10 @@ contract MintAndRegister is Script {
 
         address account = 0x14cAd55a3FaE4BCcf874397b011a6a18929c108f;
 
+        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
+        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
+        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
+        contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
         contractName.presaleMintOG{value: 0.00002 ether}(account, vipProof);
 
         uint256 tokenId = contractName.totalSupply();
