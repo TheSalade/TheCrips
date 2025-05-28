@@ -15,7 +15,7 @@ contract DeployContractName is Script {
         bytes32 merkleRootGTD = bytes32(vm.envBytes32("MERKLE_ROOT_GTD"));
         bytes32 merkleRootFCFS = bytes32(vm.envBytes32("MERKLE_ROOT_FCFS"));
 
-        ContractName contractName = new ContractName(
+        TheCripsNFTCollection contractName = new TheCripsNFTCollection(
             baseURI,
             merkleRootOG,
             merkleRootGTD,
