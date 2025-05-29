@@ -1,28 +1,52 @@
 {
-  "name": "NFT #1",
-  "description": "La collection blabla nft 1",
-  "image": "ipfs://bafybeigwfvcjgxa336sb3jaam6swiq3n7oha3yeaopbgdxatogjrpsjpzi/1.png",
-  "animation_url": "ipfs://bafybeigjmhhkhxoi2vdqz3hckog2m4uucqmyvae47ic2qlqvyr6idoz4ay/1.mp4",
+  "name": "CRIPS #1",
+  "description": "THE CRIPS",
+  "image": "ipfs://bafybeidqavkofkeuipwuvb5gyodo3vlc54wcdbiviud5kip4k2dnuxctdm/1.png",
+  "animation_url": "ipfs://bafybeiegtxryfk4mwudoq73zrr4mc2npye2cufc6h4b6xruxpjy644d6ae/1.mp4",
   "media": [
     {
       "name": "Image",
-      "url": "ipfs://bafybeigwfvcjgxa336sb3jaam6swiq3n7oha3yeaopbgdxatogjrpsjpzi/1.png",
+      "url": "ipfs://bafybeidqavkofkeuipwuvb5gyodo3vlc54wcdbiviud5kip4k2dnuxctdm/1.png",
       "mimeType": "image/png"
     },
     {
       "name": "Video",
-      "url": "ipfs://bafybeigjmhhkhxoi2vdqz3hckog2m4uucqmyvae47ic2qlqvyr6idoz4ay/1.mp4",
+      "url": "ipfs://bafybeiegtxryfk4mwudoq73zrr4mc2npye2cufc6h4b6xruxpjy644d6ae/1.mp4",
       "mimeType": "video/mp4"
     }
   ],
   "attributes": [
     {
-      "trait_type": "Type",
-      "value": "Vidéo & Image"
+      "trait_type": "Shoes Name",
+      "value": "Black gentleman shoes"
     },
     {
-      "trait_type": "Rarity",
-      "value": "Common"
+      "trait_type": "Socks Name",
+      "value": "No socks"
+    },
+    {
+      "trait_type": "Headwears Name",
+      "value": "Brown floral pirate hat"
+    },
+    {
+      "trait_type": "Background colors Name",
+      "value": "Blue"
+    },
+    {
+      "trait_type": "Ground decorations Name",
+      "value": "Pile of apples"
+    },
+    {
+      "trait_type": "Hand accessories Name",
+      "value": "Golden Axe"
+    },
+    {
+      "trait_type": "Crips colors and emotions Name",
+      "value": "Arrogant black crocodile with a cigar"
+    },
+    {
+      "trait_type": "Clothes Name",
+      "value": "Casual red and white outfit"
     }
   ]
 }
